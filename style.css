@@ -412,31 +412,290 @@ body {
 }
 
 /* Zone: Entrance */
+.entrance-zone {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 .entrance-card {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 12px;
-    text-align: center;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    height: 100%;
+    transition: var(--transition);
+}
+
+.entrance-card.door-active {
+    border-color: rgba(6, 182, 212, 0.6);
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(18, 24, 38, 0.95));
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.22);
+}
+
+.door-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.door-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
 }
 
 .door-icon {
-    font-size: 36px;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.door-patron-avatar {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    font-size: 13px;
+    line-height: 1;
+    background: #06B6D4;
+    border-radius: 50%;
+    padding: 1px;
+    animation: patronWalk 0.6s infinite alternate ease-in-out;
+}
+
+.door-patron-avatar.hidden {
+    display: none;
+}
+
+@keyframes patronWalk {
+    from { transform: translateX(0) scale(0.9); }
+    to { transform: translateX(2px) scale(1.1); }
+}
+
+.door-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.door-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
 }
 
 .door-text {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    font-weight: 700;
     color: var(--text-primary);
 }
 
-.door-subtext {
-    font-size: 0.72rem;
+.door-status-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+
+.door-status-badge.idle {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+}
+
+.door-status-badge.arriving {
+    background: rgba(6, 182, 212, 0.25);
+    color: #67E8F9;
+    border: 1px solid rgba(6, 182, 212, 0.5);
+    animation: pulseGlow 1.2s infinite alternate;
+}
+
+.door-rate {
+    font-size: 0.68rem;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.door-rate.peak {
+    color: #F87171;
+}
+
+.door-rate.offpeak {
+    color: #34D399;
+}
+
+.door-next {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.door-next strong {
+    color: var(--text-primary);
+}
+
+.zone-subheading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-bottom: 2px;
+    margin-top: 2px;
+}
+
+.subheading-tag {
+    font-size: 0.62rem;
+    color: var(--color-primary);
+    background: rgba(6, 182, 212, 0.12);
+    padding: 1px 5px;
+    border-radius: var(--radius-full);
+}
+
+.entrance-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    max-height: 155px;
+    flex: 1;
+}
+
+.empty-entrance {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 24px 0;
+}
+
+.arrived-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    transition: var(--transition);
+}
+
+.arrived-card.just-arrived {
+    background: rgba(6, 182, 212, 0.12);
+    border-color: rgba(6, 182, 212, 0.5);
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+    animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.arrived-main {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.arrived-icon {
+    font-size: 14px;
+}
+
+.arrived-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.arrived-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.arrived-id {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.76rem;
+}
+
+.arrived-type {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 0px 4px;
+    border-radius: 3px;
+}
+
+.arrived-type.type-borrow {
+    background: rgba(59, 130, 246, 0.25);
+    color: #93C5FD;
+}
+
+.arrived-type.type-return {
+    background: rgba(16, 185, 129, 0.25);
+    color: #6EE7B7;
+}
+
+.arrived-dest {
+    font-size: 0.64rem;
+    color: var(--text-muted);
+}
+
+.arrived-dest.dest-desk {
+    color: #38BDF8;
+    font-weight: 600;
+}
+
+.arrived-dest.dest-queue {
+    color: #A1A1AA;
+}
+
+.arrived-time {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 1px 6px;
+    border-radius: var(--radius-full);
+}
+
+.entrance-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: auto;
+}
+
+.footer-breakdown {
+    font-size: 0.68rem;
     color: var(--text-muted);
 }
 
@@ -470,7 +729,6 @@ body {
     gap: 4px;
     width: 70px;
     transition: var(--transition);
-    animation: fadeInScale 0.25s ease-out;
 }
 
 @keyframes fadeInScale {

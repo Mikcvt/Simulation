@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
     <!-- Header -->
@@ -96,15 +96,43 @@
 
                 <div class="stage-viewport">
                     <!-- Zone 1: Entrance Door -->
-                    <div class="stage-zone">
+                    <div class="stage-zone entrance-zone">
                         <div class="zone-header">
                             <span>Entrance</span>
-                            <span class="zone-badge">Arrivals</span>
+                            <span id="arrivalCountBadge" class="zone-badge">0 Arrived</span>
                         </div>
-                        <div class="entrance-card">
-                            <div class="door-icon">🚪</div>
-                            <div class="door-text">Library Doors</div>
-                            <div class="door-subtext">Poisson arrivals based on rush/off-peak schedule</div>
+                        <div id="entranceDoorCard" class="entrance-card">
+                            <div class="door-header-row">
+                                <div class="door-icon-wrapper">
+                                    <div class="door-icon">🚪</div>
+                                    <div id="doorPatronAvatar" class="door-patron-avatar hidden">🚶</div>
+                                </div>
+                                <div class="door-info">
+                                    <div class="door-title-row">
+                                        <span class="door-text">Library Doors</span>
+                                        <span id="doorStatusBadge" class="door-status-badge idle">Doors Open</span>
+                                    </div>
+                                    <div id="doorRateBadge" class="door-rate offpeak">🌿 Off-Peak: Exp(5.0m)</div>
+                                </div>
+                            </div>
+                            <div id="doorNextArrival" class="door-next">
+                                <span>Next: <strong>Student #1</strong></span>
+                                <span>in ~X.Xm</span>
+                            </div>
+                        </div>
+
+                        <div class="zone-subheading">
+                            <span>Incoming Stream</span>
+                            <span class="subheading-tag">Poisson Feed</span>
+                        </div>
+
+                        <div id="entranceContainer" class="entrance-container">
+                            <div class="empty-entrance">✨ Waiting for first arrival...</div>
+                        </div>
+
+                        <div class="entrance-footer">
+                            <span>Total: <strong id="entranceTotalCount">0</strong></span>
+                            <span id="entranceTypeBreakdown" class="footer-breakdown">📘 0 | 🔄 0</span>
                         </div>
                     </div>
 
@@ -260,6 +288,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label" for="inputPeakStart">Peak Starts (simulation min)</label>
+                        <input id="inputPeakStart" class="form-input" type="number" min="0" max="479" step="1" value="120">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="inputPeakEnd">Peak Ends (simulation min)</label>
+                        <input id="inputPeakEnd" class="form-input" type="number" min="1" max="480" step="1" value="300">
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label" for="inputPeakMean">Peak Rush Inter-arrival Mean (mins)</label>
                         <input id="inputPeakMean" class="form-input" type="number" step="0.5" min="0.5" value="2.0">
                     </div>
@@ -294,6 +332,6 @@
     </main>
 
     <!-- App Script -->
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 </html>

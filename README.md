@@ -15,7 +15,7 @@ All files needed for the project are organized in this `simulation` directory:
 | **`app.js`** | Discrete event simulation engine, FCFS multi-server queuing logic, live charts & rendering. |
 | **`style.css`** | Modern glassmorphic dark-mode UI styling and animations. |
 | **`run_app.py`** | One-click Python script to launch the visual simulation in your browser. |
-| **`Cervantes.py`** | The core SimPy discrete-event simulation Python script. |
+| **`Cervantes.py`** | The SimPy command-line version of the synchronized web simulation model. |
 
 ---
 
@@ -35,7 +35,7 @@ You can launch the visual application in two simple ways:
 
 ---
 
-### Method 2: Run the Original SimPy CLI Script
+### Method 2: Run the Synchronized CLI Script
 ```bash
 python c:\Users\cerva\Downloads\simulation\Cervantes.py
 ```

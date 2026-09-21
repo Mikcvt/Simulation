@@ -302,6 +302,7 @@ class UIController {
         this.sim = new LibrarySimulation();
         this.currentTime = 0;
         this.isPlaying = false;
+        this.hasStarted = false;
         this.speed = 5; // Sim minutes per real second
         this.lastFrameTimestamp = null;
         this.animationFrameId = null;
@@ -330,6 +331,15 @@ class UIController {
         this.staffDesksContainer = document.getElementById('staffDesksContainer');
         this.exitContainer = document.getElementById('exitContainer');
         this.queueCountBadge = document.getElementById('queueCountBadge');
+        this.arrivalCountBadge = document.getElementById('arrivalCountBadge');
+        this.entranceDoorCard = document.getElementById('entranceDoorCard');
+        this.doorStatusBadge = document.getElementById('doorStatusBadge');
+        this.doorRateBadge = document.getElementById('doorRateBadge');
+        this.doorNextArrival = document.getElementById('doorNextArrival');
+        this.doorPatronAvatar = document.getElementById('doorPatronAvatar');
+        this.entranceContainer = document.getElementById('entranceContainer');
+        this.entranceTotalCount = document.getElementById('entranceTotalCount');
+        this.entranceTypeBreakdown = document.getElementById('entranceTypeBreakdown');
 
         // Metric Card elements
         this.kpiCompleted = document.getElementById('kpiCompleted');
@@ -355,6 +365,8 @@ class UIController {
         this.inputBorrowMean = document.getElementById('inputBorrowMean');
         this.inputReturnMean = document.getElementById('inputReturnMean');
         this.inputProbBorrow = document.getElementById('inputProbBorrow');
+        this.inputPeakStart = document.getElementById('inputPeakStart');
+        this.inputPeakEnd = document.getElementById('inputPeakEnd');
         this.inputPeakMean = document.getElementById('inputPeakMean');
         this.inputOffpeakMean = document.getElementById('inputOffpeakMean');
         this.inputSeed = document.getElementById('inputSeed');
@@ -375,6 +387,7 @@ class UIController {
         });
 
         this.timelineProgress.addEventListener('input', (e) => {
+            this.hasStarted = true;
             this.currentTime = parseFloat(e.target.value);
             this.render();
         });
@@ -395,6 +408,7 @@ class UIController {
 
     play() {
         if (this.isPlaying) return;
+        this.hasStarted = true;
         this.isPlaying = true;
         this.btnPlay.classList.add('active-btn');
         this.btnPause.classList.remove('active-btn');
@@ -414,12 +428,14 @@ class UIController {
 
     step() {
         this.pause();
+        this.hasStarted = true;
         this.currentTime = Math.min(this.sim.params.simTime, this.currentTime + 2.0);
         this.render();
     }
 
     reset() {
         this.pause();
+        this.hasStarted = false;
         this.currentTime = 0;
         this.sim.reset();
         this.render();
@@ -427,6 +443,7 @@ class UIController {
 
     jumpToEnd() {
         this.pause();
+        this.hasStarted = true;
         this.currentTime = this.sim.params.simTime;
         this.render();
     }
@@ -436,6 +453,8 @@ class UIController {
         const meanBorrow = parseFloat(this.inputBorrowMean.value) || 5.0;
         const meanReturn = parseFloat(this.inputReturnMean.value) || 2.0;
         const probBorrow = (parseFloat(this.inputProbBorrow.value) || 70) / 100.0;
+        const peakStart = Math.max(0, Math.min(479, parseFloat(this.inputPeakStart.value) || 120));
+        const peakEnd = Math.max(peakStart + 1, Math.min(480, parseFloat(this.inputPeakEnd.value) || 300));
         const peakMean = parseFloat(this.inputPeakMean.value) || 2.0;
         const offpeakMean = parseFloat(this.inputOffpeakMean.value) || 5.0;
         const seed = parseInt(this.inputSeed.value, 10) || 42;
@@ -445,6 +464,8 @@ class UIController {
             meanBorrowTime: meanBorrow,
             meanReturnTime: meanReturn,
             probBorrow,
+            peakStart,
+            peakEnd,
             peakArrivalMean: peakMean,
             offpeakArrivalMean: offpeakMean,
             seed
@@ -458,6 +479,8 @@ class UIController {
         this.inputBorrowMean.value = 5.0;
         this.inputReturnMean.value = 2.0;
         this.inputProbBorrow.value = 70;
+        this.inputPeakStart.value = 120;
+        this.inputPeakEnd.value = 300;
         this.inputPeakMean.value = 2.0;
         this.inputOffpeakMean.value = 5.0;
         this.inputSeed.value = 42;
@@ -505,12 +528,14 @@ class UIController {
         this.timeMinuteDisplay.textContent = `${this.currentTime.toFixed(1)} / ${this.sim.params.simTime} mins`;
 
         // Update Period Badge
+        const peakStartClock = this.formatClock(this.sim.params.peakStart);
+        const peakEndClock = this.formatClock(this.sim.params.peakEnd);
         if (state.isPeak) {
             this.periodBadge.className = 'period-badge peak';
-            this.periodBadge.innerHTML = '<span class="pulse-dot"></span> ⚡ PEAK RUSH HOURS (120m - 300m / Mean: 2.0m)';
+            this.periodBadge.innerHTML = `<span class="pulse-dot"></span> ⚡ PEAK RUSH (${peakStartClock} - ${peakEndClock})`;
         } else {
             this.periodBadge.className = 'period-badge offpeak';
-            this.periodBadge.innerHTML = '<span class="pulse-dot off"></span> OFF-PEAK HOURS (Mean: 5.0m)';
+            this.periodBadge.innerHTML = `<span class="pulse-dot off"></span> OFF-PEAK (Peak: ${peakStartClock} - ${peakEndClock})`;
         }
 
         // Update KPI Cards
@@ -554,6 +579,9 @@ class UIController {
     }
 
     renderStage(state) {
+        // Render Entrance Arrivals
+        this.renderEntrance(state);
+
         // Render Waiting Queue
         if (state.inQueue.length === 0) {
             this.queueLineContainer.innerHTML = '<div class="empty-queue-msg">✨ Queue is clear. No waiting students.</div>';
@@ -663,6 +691,111 @@ class UIController {
         }
     }
 
+    renderEntrance(state) {
+        if (!this.entranceContainer) return;
+
+        if (!this.hasStarted) {
+            this.arrivalCountBadge.textContent = '0 arrived';
+            this.doorStatusBadge.className = 'door-status-badge idle';
+            this.doorStatusBadge.textContent = 'Ready to Start';
+            this.doorNextArrival.innerHTML = '<span>Press Play to start arrivals</span>';
+            this.doorPatronAvatar.classList.add('hidden');
+            this.entranceDoorCard.classList.remove('door-active');
+            this.entranceContainer.innerHTML = '<div class="empty-entrance">Press Play to begin the simulation.</div>';
+            this.entranceTotalCount.textContent = '0';
+            this.entranceTypeBreakdown.textContent = 'No arrivals yet';
+            return;
+        }
+
+        const arrived = this.sim.students.filter(s => s.arrivalTime <= this.currentTime);
+        const totalArrived = arrived.length;
+        const borrowCount = arrived.filter(s => s.type === 'Borrow').length;
+        const returnCount = arrived.filter(s => s.type === 'Return').length;
+
+        // Badge in zone header
+        if (this.arrivalCountBadge) {
+            this.arrivalCountBadge.textContent = `${totalArrived} arrived`;
+        }
+
+        // Rate & Schedule indicator
+        const isPeak = this.currentTime >= this.sim.params.peakStart && this.currentTime < this.sim.params.peakEnd;
+        if (this.doorRateBadge) {
+            if (isPeak) {
+                this.doorRateBadge.className = 'door-rate peak';
+                this.doorRateBadge.innerHTML = `⚡ Peak Rush: Exp(${this.sim.params.peakArrivalMean.toFixed(1)}m)`;
+            } else {
+                this.doorRateBadge.className = 'door-rate offpeak';
+                this.doorRateBadge.innerHTML = `🌿 Off-Peak: Exp(${this.sim.params.offpeakArrivalMean.toFixed(1)}m)`;
+            }
+        }
+
+        // Next arrival countdown
+        const nextStudent = this.sim.students.find(s => s.arrivalTime > this.currentTime);
+        if (this.doorNextArrival) {
+            if (nextStudent) {
+                const waitToNext = Math.max(0, nextStudent.arrivalTime - this.currentTime);
+                this.doorNextArrival.innerHTML = `<span>Next: <strong>#${nextStudent.id}</strong></span> <span>in ${waitToNext.toFixed(1)}m</span>`;
+            } else {
+                this.doorNextArrival.innerHTML = `<span>Status:</span> <span>🏁 Shift Completed</span>`;
+            }
+        }
+
+        // Recent arrivals (last 4 arrivals up to currentTime)
+        const recentArrivals = arrived.slice(-4).reverse();
+        const latest = recentArrivals[0];
+        const isRecent = latest && (this.currentTime - latest.arrivalTime) < 1.8;
+
+        // Door status badge & animated patron avatar
+        if (this.doorStatusBadge) {
+            if (isRecent) {
+                this.doorStatusBadge.className = 'door-status-badge arriving';
+                this.doorStatusBadge.innerHTML = `🚶 #${latest.id} Entered`;
+                if (this.doorPatronAvatar) this.doorPatronAvatar.classList.remove('hidden');
+                if (this.entranceDoorCard) this.entranceDoorCard.classList.add('door-active');
+            } else {
+                this.doorStatusBadge.className = 'door-status-badge idle';
+                this.doorStatusBadge.innerHTML = `Doors Open`;
+                if (this.doorPatronAvatar) this.doorPatronAvatar.classList.add('hidden');
+                if (this.entranceDoorCard) this.entranceDoorCard.classList.remove('door-active');
+            }
+        }
+
+        // Render the next students scheduled to enter the library.
+        const upcomingArrivals = this.sim.students
+            .filter(st => st.arrivalTime > this.currentTime)
+            .slice(0, 4);
+
+        if (upcomingArrivals.length === 0) {
+            this.entranceContainer.innerHTML = '<div class="empty-entrance">🏁 No more scheduled arrivals.</div>';
+        } else {
+            this.entranceContainer.innerHTML = upcomingArrivals.map((st) => {
+                const timeToArrival = st.arrivalTime - this.currentTime;
+
+                return `
+                    <div class="arrived-card upcoming-card" title="Student #${st.id} scheduled at ${st.arrivalTime.toFixed(1)}m">
+                        <div class="arrived-main">
+                            <div class="arrived-details">
+                                <div class="arrived-row">
+                                    <span class="arrived-id">Student #${st.id}</span>
+                                </div>
+                                <div class="arrived-dest">Scheduled arrival</div>
+                            </div>
+                        </div>
+                        <div class="arrived-time">in ${timeToArrival.toFixed(1)}m</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Footer summary
+        if (this.entranceTotalCount) {
+            this.entranceTotalCount.textContent = totalArrived;
+        }
+        if (this.entranceTypeBreakdown) {
+            this.entranceTypeBreakdown.textContent = `📘 ${borrowCount} | 🔄 ${returnCount}`;
+        }
+    }
+
     renderCharts(state) {
         this.renderQueueChart();
         this.renderWaitChart();
@@ -708,7 +841,7 @@ class UIController {
         // Peak Label
         ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
         ctx.font = '10px Inter, sans-serif';
-        ctx.fillText('Peak Rush Zone (120-300m)', peakX1 + 6, padTop + 14);
+        ctx.fillText(`Peak Rush (${this.sim.params.peakStart}-${this.sim.params.peakEnd}m)`, peakX1 + 6, padTop + 14);
 
         // Grid lines
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
